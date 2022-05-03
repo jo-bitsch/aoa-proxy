@@ -1,0 +1,6 @@
+/aoa-proxy
+/*.o
+/*.json
+/.vscode/
+/aoa-proxy.1
+/.vscode-ctags

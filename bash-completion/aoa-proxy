@@ -1,0 +1,77 @@
+#/usr/bin/env bash
+
+_aoa_proxy_completions()
+{
+    local cur prev command module i
+
+    COMPREPLY=()
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD-1]}
+
+    case $prev in
+        -p | --port )
+            local IFS=$'\n'
+            local suggestions=($(compgen -W "$(ls -d /sys/bus/usb/devices/*-* | grep -v : | xargs -I % sh -c \
+                'echo  $(basename % && test -f %/manufacturer && cat %/manufacturer && echo -n "- " \
+                 && test -f %/product && cat %/product)') " -- "$cur"))
+
+            if [ "${#suggestions[@]}" == "1" ]; then
+                # if there's only one match, we remove the command literal
+                # to proceed with the automatic completion of the number
+                local number=$(echo ${suggestions[0]/%\ */})
+                COMPREPLY=("$number")
+            else
+                # more than one suggestions resolved,
+                # respond with the suggestions intact
+                COMPREPLY=("${suggestions[@]}")
+            fi
+
+            return 0
+            ;;
+        -d | --description )
+            COMPREPLY=($(compgen -W "whatever" -- "$cur"))
+            return 0
+            ;;
+        -m | --manufacturer )
+            CANDIDATES=('aoa-proxy')
+            local IFS=$'\n'
+            CANDIDATES=($(compgen -W "${CANDIDATES[*]}" -- "$cur"))
+            if [ ${#CANDIDATES[*]} -eq 0 ]; then
+                COMPREPLY=()
+            else
+                COMPREPLY=($(printf '%q\n' "${CANDIDATES[@]}"))
+            fi
+            return 0
+            ;;
+        -M | --model )
+            COMPREPLY=($(compgen -W "generic-device" -- "$cur"))
+            return 0
+            ;;
+        -s | --serial )
+            COMPREPLY=($(compgen -W "$(hostname)" -- "$cur"))
+            return 0
+            ;;
+        -u | --url )
+            COMPREPLY=($(compgen -W "https://github.com/jo-bitsch/aoa-proxy/" -- "$cur"))
+            return 0
+            ;;
+        -v | --model-version )
+            COMPREPLY=($(compgen -W "0.1" -- "$cur"))
+            return 0
+            ;;
+    esac
+
+    if [[ "$cur" == -* ]] ; then
+        options="$options -w -? -V -p -d -m -M -s -u -v --port \
+        --description --manufacturer --model --serial --url --model-version \
+        --wait --help --usage --version-description --model"
+
+        COMPREPLY=($(compgen -W "$options" -- "$cur"))
+        return 0
+    fi
+
+
+}
+
+complete -F _aoa_proxy_completions aoa-proxy
+complete -F _aoa_proxy_completions ./aoa-proxy

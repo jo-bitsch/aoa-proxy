@@ -1,0 +1,5 @@
+[Unit]
+Description="forward AOA stream from USB connected android device to ssh or cockpit"
+
+[Service]
+ExecStart=/usr/lib/aoa-proxy-forward %I

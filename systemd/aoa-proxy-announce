@@ -1,0 +1,23 @@
+#!/bin/sh
+set -x
+PORT="$(basename "$1")"
+
+MANUFACTURER="aoa-proxy"
+MODEL="$(hostnamectl | egrep "(Vendor|Model)" | cut -f2 -d: | xargs)"
+VERSION="$(hostnamectl | grep -Po "(?<=Operating System: ).*" )"
+SERIAL=""$(hostnamectl hostname)""
+DESCRIPTION="""$MODEL
+IP: $(ip -o route | grep -Po "(?<=src )\S+")
+"""
+URL="https://github.com/jo-bitsch/aoa-proxy/"
+
+
+/usr/sbin/aoa-proxy \
+  --port "$PORT" \
+  --manufacturer "$MANUFACTURER" \
+  --model "$MODEL" \
+  --model-version "$VERSION" \
+  --serial "$SERIAL" \
+  --description "$DESCRIPTION" \
+  --url "$URL" \
+  --announce

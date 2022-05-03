@@ -1,0 +1,31 @@
+# udev rules to automatically deal with connected android devices
+# 51-android.rules from the android-sdk-platform-tools-common package already does some nice enumeration
+# we could simply check for: ENV{adb_user}=="yes"
+# make sure we are sorted later, by using prefix 52
+
+# allow to skip the automatic aoa announcement and forwarding by setting a marker file.
+TEST=="/etc/aoa-proxy_not_to_be_run", GOTO="aoa-proxy-end"
+
+# is this a device in AOA mode, that got enumerated?
+# if so, start the forwarding
+ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d00", GOTO="aoa-proxy-forward"
+ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d01", GOTO="aoa-proxy-forward"
+ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d02", GOTO="aoa-proxy-forward"
+ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d03", GOTO="aoa-proxy-forward"
+
+ENV{adb_user}=="yes", TAG+="systemd", ENV{SYSTEMD_WANTS}="aoa-proxy-announce@.service"
+ENV{adb_user}=="yes", GOTO="aoa-proxy-end"
+
+
+# fallback, if the 51-android.rules does not exist
+TEST=="/usr/lib/udev/rules.d/51-android.rules", GOTO="aoa-proxy-end"
+
+# TODO: add a whitelist of devices to skip, because they might act up if they get the AOA get version control transfer
+SUBSYSTEM=="usb", DRIVER=="usb", ATTR{removable}=="removable", TAG+="systemd", ENV{SYSTEMD_WANTS}="aoa-proxy-announce@.service"
+GOTO="aoa-proxy-end"
+
+LABEL="aoa-proxy-forward"
+# for devices that have AOA already activated, start a forwarder
+ATTR{idVendor}=="18d1", TAG+="systemd", ENV{SYSTEMD_WANTS}="aoa-proxy-forward@.service"
+
+LABEL="aoa-proxy-end"
