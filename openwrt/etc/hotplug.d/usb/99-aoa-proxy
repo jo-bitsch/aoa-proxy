@@ -1,0 +1,13 @@
+#!/bin/sh /etc/rc.common
+
+
+#TODO: this is WIP and not yet working.
+
+# todo, only in the right vid/pid combination
+case "${ACTION}" in
+    add)
+        # this also misses the port still
+        /etc/init.d/aoa-proxy-forward "${DEVICENAME}" start
+    remove)
+        /etc/init.d/aoa-proxy-forward stop
+esac
