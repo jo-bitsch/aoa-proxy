@@ -41,7 +41,7 @@ sudo make install
 sudo systemctl daemon-reload
 ```
 
-I plan to also provide packages (such as `deb`, `rpm` and OpenWRT `apk`) to install via standard package managers.
+I plan to also provide packages (such as `deb`, `rpm` and OpenWRT `ipk`) to install via standard package managers.
 
 ## Deactivate automatic announcement
 
@@ -92,4 +92,4 @@ However, the automatic announcement already works. Data sent via AOA will alread
 # QA
 ## What about Apple devices?
 
-AOA is not supported by Apple. Maybe, someone could build something similar based on [PeerTalk](https://github.com/rsms/peertalk).
+AOA is not supported by Apple. Maybe, someone could build something similar based on [PeerTalk](https://github.com/rsms/peertalk) or [libimobiledevice](https://libimobiledevice.org/).
