@@ -17,9 +17,17 @@
 #include <b64/cdecode.h>
 #include <sys/param.h>
 
+#if __has_include("version.h")
+#include "version.h"
+#else
+#ifndef GIT_VERSION
+#define GIT_VERSION "unknown"
+#endif
+#endif
+
 #define PORT_NUMBERS_LEN 8
 
-const char *argp_program_version = "aoa-proxy 0.1";
+const char *argp_program_version = "aoa-proxy " GIT_VERSION;
 const char *argp_program_bug_address = "https://github.com/jo-bitsch/aoa-proxy/issues";
 static char doc[] =
     "Interact with Android devices using the Android Open Accessory protocol"

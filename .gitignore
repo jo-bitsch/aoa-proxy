@@ -4,3 +4,5 @@
 /.vscode/
 /aoa-proxy.1
 /.vscode-ctags
+/version.h
+/version~
