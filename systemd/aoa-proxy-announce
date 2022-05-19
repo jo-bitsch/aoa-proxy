@@ -7,7 +7,7 @@ MODEL="$(hostnamectl | egrep "(Vendor|Model)" | cut -f2 -d: | xargs)"
 VERSION="$(hostnamectl | grep -Po "(?<=Operating System: ).*" )"
 SERIAL=""$(hostnamectl hostname)""
 DESCRIPTION="""$MODEL
-IP: $(ip -o route | grep -Po "(?<=src )\S+")
+IP: $(ip -o route | egrep -v "dev (br|virbr|docker)" | grep -Po "(?<=src )\S+")
 """
 URL="https://github.com/jo-bitsch/aoa-proxy/"
 
