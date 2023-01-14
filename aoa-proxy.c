@@ -14,7 +14,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <b64/cdecode.h>
+#if __has_include(<b64/cdecode.h>)
+  #include <b64/cdecode.h>
+  #define HAS_HID 1
+#endif
 #include <sys/param.h>
 
 #if __has_include("version.h")
@@ -58,8 +61,10 @@ static struct argp_option options[] = {
      "Announce AOA to the device."},
     {"forward", 'f', 0, 0,
      "Forward stdin to AOA device and forward AOA device to stdout."},
+#ifdef HAS_HID
     {"hid",'y', 0, 0, 
      "send HID events instead (first line: base64 encoded descriptor, next lines: base64 encoded events"},
+#endif
     {0, 0, 0, 0, "Announce options"},
     {"audio", 'A', 0, 0,
      "enable audio interface for AOAv2. (default: false)"},
@@ -93,7 +98,9 @@ struct arguments {
   bool reset;
   bool announce;
   bool forward;
+#ifdef HAS_HID
   bool hid;
+#endif
 };
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
@@ -179,9 +186,11 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
   case 'w':
     arguments->wait = true;
     break;
+#ifdef HAS_HID
   case 'y':
     arguments->hid = true;
     break;
+#endif
 
   case ARGP_KEY_END:
     if (arguments->busnum == -1 || arguments->portnums[0] == 0) {
@@ -544,6 +553,7 @@ static void aoa_cat(libusb_device_handle *device, struct arguments *arguments) {
 exiting:;
 }
 
+#ifdef HAS_HID
 static void aoa_hid(libusb_device_handle *device, struct arguments *arguments) {
   char *line = NULL;
   size_t len = 0;
@@ -624,6 +634,7 @@ static void aoa_hid(libusb_device_handle *device, struct arguments *arguments) {
 
   free(line);
 }
+#endif  // HAS_HID
 
 static void aoa_reset(libusb_device_handle *device,
                       struct arguments *arguments) {
@@ -647,7 +658,9 @@ int main(int argc, char *argv[]) {
   arguments.reset = false;
   arguments.wait = false;
   arguments.audio = false;
+#ifdef HAS_HID
   arguments.hid = false;
+#endif
   arguments.announce = false;
   arguments.forward = false;
 
@@ -669,11 +682,15 @@ int main(int argc, char *argv[]) {
     }
     if(arguments.forward){
       aoa_cat(dev, &arguments);
-    } else if(arguments.hid){
-      aoa_hid(dev, &arguments);
-    }
-    if (arguments.reset) {
-      aoa_reset(dev, &arguments);
+    } else {
+#ifdef HAS_HID
+      if(arguments.hid){
+        aoa_hid(dev, &arguments);
+      }
+#endif
+      if (arguments.reset) {
+        aoa_reset(dev, &arguments);
+      }
     }
   }
   libusb_close(dev);
