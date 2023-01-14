@@ -1,7 +1,7 @@
 # udev rules to automatically deal with connected android devices
 # 51-android.rules from the android-sdk-platform-tools-common package already does some nice enumeration
 # we could simply check for: ENV{adb_user}=="yes"
-# make sure we are sorted later, by using prefix 52
+# make sure we are sorted later
 
 # allow to skip the automatic aoa announcement and forwarding by setting a marker file.
 TEST=="/etc/aoa-proxy_not_to_be_run", GOTO="aoa-proxy-end"

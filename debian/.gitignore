@@ -1,0 +1,6 @@
+/*.substvars
+/.debhelper/
+/aoa-proxy/
+/*.log
+/files
+/debhelper-build-stamp

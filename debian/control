@@ -1,0 +1,27 @@
+Source: aoa-proxy
+Section: contrib/embedded
+Priority: standard
+Maintainer: Jó Ágila Bitsch <jgilab@gmail.com>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+Standards-Version: 4.6.1
+Homepage: https://github.com/jo-bitsch/aoa-proxy
+Vcs-Browser: https://github.com/jo-bitsch/aoa-proxy
+Vcs-Git: https://github.com/jo-bitsch/aoa-proxy.git
+
+Package: aoa-proxy
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+Description: interact with Android devices using the Android Open Accessory Protocol
+ Most Android devices support a USB protocol named Android Open Accessory.
+ .
+ This protocol allows Android devices to communicate via USB, while they are in
+ USB accessory mode, instead of USB host mode. This allows you, to plug an
+ Android device via a typical charging cable to the USB A port of a generic
+ linux machine (Raspberry Pi, OpenWRT Router, arbitrary computer without its
+ own screen) to advertise and open an App on the connected Android device.
+ .
+ This program allows allows you to set up your computer accordingly.
