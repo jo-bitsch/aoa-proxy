@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#if __has_include(<b64/cdecode.h>)
+#if __has_include(<b64/cdecode.h>) || ! defined (NO_HID)
   #include <b64/cdecode.h>
   #define HAS_HID 1
 #endif

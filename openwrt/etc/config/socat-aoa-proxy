@@ -1,0 +1,4 @@
+config socat 'aoa-proxy'
+	option enable '1'
+	option SocatOptions '-d -d EXEC:"aoa-proxy --wait --forward --port $PORT",fork TCP:localhost:22'
+	option user 'nobody'

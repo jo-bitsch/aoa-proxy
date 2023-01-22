@@ -1,13 +1,25 @@
 #!/bin/sh /etc/rc.common
 
-
-#TODO: this is WIP and not yet working.
-
-# todo, only in the right vid/pid combination
 case "${ACTION}" in
     add)
-        # this also misses the port still
-        /etc/init.d/aoa-proxy-forward "${DEVICENAME}" start
+        case "${PRODUCT}" in
+            18d1/2d00/* | 18d1/2d01/* | 18d1/2d04/* | 18d1/2d05/*)
+                /etc/init.d/aoa-proxy-forward "${DEVICENAME}" start
+                ;;
+            *)
+                /usr/sbin/aoa-proxy \
+                    --port="${DEVICENAME}" \
+                    --announce \
+                    --manufacturer="aoa-proxy" \
+                    --model="" \
+                    --model-version="" \
+                    --serial="" \
+                    --url="" \
+                    --description=""
+                ;;
+        esac
+        ;;
     remove)
-        /etc/init.d/aoa-proxy-forward stop
+        /etc/init.d/aoa-proxy-forward "${DEVICENAME}" stop
+        ;;
 esac
