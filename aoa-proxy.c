@@ -571,7 +571,8 @@ static void aoa_hid(libusb_device_handle *device, __attribute__ ((unused)) struc
 
   nread = getline(&line, &len, stdin);
   ssize_t max_allowed_line_length = nread;
-  char binary_line[max_allowed_line_length];
+  char binary_line[max_allowed_line_length + 2];  // this ensures, that there is always enough space for the decoded string,
+                                                  // even in the degenerate case of very short malicious encoded lines.
 
   base64_init_decodestate(&state);
   ssize_t binary_len = base64_decode_block(line, nread, binary_line, &state);
@@ -606,7 +607,6 @@ static void aoa_hid(libusb_device_handle *device, __attribute__ ((unused)) struc
       fprintf(stderr, "base64 encoded event size too long (length: %ld, max_allowed_line_length: %ld)\n", nread, max_allowed_line_length);
       break;
     }
-    // TODO: check size because bas64_decode_block might run over buffer
     base64_init_decodestate(&state);
     binary_len = base64_decode_block(line, nread, binary_line, &state);
     if(binary_len > max_packet_size){
