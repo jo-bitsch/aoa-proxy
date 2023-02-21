@@ -54,39 +54,38 @@ static char doc[] =
     ;
 
 static struct argp_option options[] = {
-    {0, 0, 0, 0, "Device selection options"},
-    {"port", 'p', "BUSNUM-PORTNUMS", 0, "Connect to this USB device. e.g. \"2-2\""},
-    {0, 0, 0, 0, "Possible actions"},
+    {0, 0, 0, 0, "Device selection options", 0},
+    {"port", 'p', "BUSNUM-PORTNUMS", 0, "Connect to this USB device. e.g. \"2-2\"", 0},
+    {0, 0, 0, 0, "Possible actions", 0},
     {"announce", 'a', 0, 0,
-     "Announce AOA to the device."},
+     "Announce AOA to the device.", 0},
     {"forward", 'f', 0, 0,
-     "Forward stdin to AOA device and forward AOA device to stdout."},
+     "Forward stdin to AOA device and forward AOA device to stdout.", 0},
 #ifdef HAS_HID
     {"hid",'y', 0, 0, 
-     "send HID events instead (first line: base64 encoded descriptor, next lines: base64 encoded events"},
+     "send HID events instead (first line: base64 encoded descriptor, next lines: base64 encoded events", 0},
 #endif
-    {0, 0, 0, 0, "Announce options"},
+    {0, 0, 0, 0, "Announce options", 0},
     {"audio", 'A', 0, 0,
-     "enable audio interface for AOAv2. (default: false)"},
+     "enable audio interface for AOAv2. (default: false)", 0},
     {"manufacturer", 'm', "MANUFACTURER", 0,
-     "Who produced the accessory. (default: aoa-proxy)"},
+     "Who produced the accessory. (default: aoa-proxy)", 0},
     {"model", 'M', "MODEL", 0,
-     "What accessory model ist this? (default: generic-device)"},
+     "What accessory model ist this? (default: generic-device)", 0},
     {"model-version", 'v', "VERSION", 0,
-     "What version is this accessory? (default: 0.1)"},
+     "What version is this accessory? (default: 0.1)", 0},
     {"serial", 's', "SERIAL", 0,
-     "What's the serial number of this accesory? (default: \"\""},
+     "What's the serial number of this accesory? (default: \"\"", 0},
     {"description", 'd', "DESCRIPTION", 0,
-     "Display string for the default Android UI. (default: \"\")"},
-    {"url", 'u', "URL", 0, "Where to get more information? (default: \"\")"},
-    {0, 0, 0, 0, "Forwarding only options"},
+     "Display string for the default Android UI. (default: \"\")", 0},
+    {"url", 'u', "URL", 0, "Where to get more information? (default: \"\")", 0},
+    {0, 0, 0, 0, "Forwarding only options", 0},
     {"wait", 'w', 0, 0,
      "Wait for first byte from AOA device before forwarding input from stdin. "
-     "(default: false)"},
-    {0, 0, 0, 0, "Forwarding/HID options"},
+     "(default: false)", 0},
     {"reset-on-exit", 'r', 0, 0,
      "leave AOA mode on exit from forwarding."
-     "(default: false)"},
+     "(default: false)", 0},
     {0}};
 
 struct arguments {
@@ -172,10 +171,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
   case 'A':
     arguments->audio = true;
     break;
- case 'a':
+  case 'a':
     arguments->announce = true;
     break;
- case 'f':
+  case 'f':
     arguments->forward = true;
     break;
 
@@ -204,7 +203,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
   return 0;
 }
 
-static struct argp argp = {options, parse_opt, 0, doc};
+static struct argp argp = {options, parse_opt, 0, doc, NULL, NULL, NULL};
 
 static libusb_device_handle *get_usb_device(uint8_t busnum, uint8_t* portnums) {
   libusb_device **devs;
@@ -381,7 +380,7 @@ static void aoa_to_stdout_cb(struct libusb_transfer *transfer) {
   }
 }
 
-static void signal_handler(int sig) {}
+static void signal_handler(__attribute__ ((unused)) int sig) {}
 
 static void aoa_cat(libusb_device_handle *device, struct arguments *arguments) {
   libusb_device *dev = libusb_get_device(device);
@@ -554,7 +553,7 @@ exiting:;
 }
 
 #ifdef HAS_HID
-static void aoa_hid(libusb_device_handle *device, struct arguments *arguments) {
+static void aoa_hid(libusb_device_handle *device, __attribute__ ((unused)) struct arguments *arguments) {
   char *line = NULL;
   size_t len = 0;
   ssize_t nread = 0;
@@ -571,7 +570,7 @@ static void aoa_hid(libusb_device_handle *device, struct arguments *arguments) {
   base64_decodestate state;
 
   nread = getline(&line, &len, stdin);
-  size_t max_allowed_line_length = nread;
+  ssize_t max_allowed_line_length = nread;
   char binary_line[max_allowed_line_length];
 
   base64_init_decodestate(&state);
@@ -587,14 +586,14 @@ static void aoa_hid(libusb_device_handle *device, struct arguments *arguments) {
                             LIBUSB_REQUEST_TYPE_VENDOR |
                                 LIBUSB_TRANSFER_TYPE_CONTROL |
                                 LIBUSB_ENDPOINT_OUT,
-                            54, hid_index, binary_len, binary_line, 0, 0);
+                            54, hid_index, binary_len, (unsigned char*)binary_line, 0, 0);
 
-  for(size_t offset=0; offset < binary_len; offset += max_packet_size){
+  for(ssize_t offset=0; offset < binary_len; offset += max_packet_size){
     libusb_control_transfer(device,
                               LIBUSB_REQUEST_TYPE_VENDOR |
                                   LIBUSB_TRANSFER_TYPE_CONTROL |
                                   LIBUSB_ENDPOINT_OUT,
-                              56, hid_index, offset, binary_line + offset, MIN(binary_len - offset, max_packet_size), 0);
+                              56, hid_index, offset, (unsigned char*)binary_line + offset, MIN(binary_len - offset, max_packet_size), 0);
   }
   
   fprintf(stderr, "registered HID device (len=%ld)\n", binary_len);
@@ -618,7 +617,7 @@ static void aoa_hid(libusb_device_handle *device, struct arguments *arguments) {
                               LIBUSB_REQUEST_TYPE_VENDOR |
                                   LIBUSB_TRANSFER_TYPE_CONTROL |
                                   LIBUSB_ENDPOINT_OUT,
-                              57, hid_index, 0, binary_line, binary_len, 0);
+                              57, hid_index, 0, (unsigned char*)binary_line, binary_len, 0);
 
      if(r<0){
       fprintf(stderr, "error: %s\n", libusb_error_name(r));
@@ -630,14 +629,14 @@ static void aoa_hid(libusb_device_handle *device, struct arguments *arguments) {
                             LIBUSB_REQUEST_TYPE_VENDOR |
                                 LIBUSB_TRANSFER_TYPE_CONTROL |
                                 LIBUSB_ENDPOINT_OUT,
-                            55, hid_index, 0, binary_line, 0, 0);
+                            55, hid_index, 0, (unsigned char*)binary_line, 0, 0);
 
   free(line);
 }
 #endif  // HAS_HID
 
 static void aoa_reset(libusb_device_handle *device,
-                      struct arguments *arguments) {
+                      __attribute__ ((unused)) struct arguments *arguments) {
   int r = libusb_reset_device(device);
   if (r != 0 && r != LIBUSB_ERROR_NOT_FOUND) {
     fprintf(stderr, "error resetting the device: %s\n", libusb_error_name(r));
