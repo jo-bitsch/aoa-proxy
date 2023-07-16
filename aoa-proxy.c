@@ -19,6 +19,8 @@
   #define HAS_HID 1
 #endif
 #include <sys/param.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #if __has_include("version.h")
 #include "version.h"
@@ -83,6 +85,10 @@ static struct argp_option options[] = {
     {"wait", 'w', 0, 0,
      "Wait for first byte from AOA device before forwarding input from stdin. "
      "(default: false)", 0},
+    {"connect", 'c', 0, 0,
+     "Connect to a tcp port on localhost and forward AOA traffic via network instead of stdio. "
+     "(default: \"\")", 0},
+    {0, 0, 0, 0, "Forwarding/HID options", 0},
     {"reset-on-exit", 'r', 0, 0,
      "leave AOA mode on exit from forwarding."
      "(default: false)", 0},
@@ -97,6 +103,7 @@ struct arguments {
   bool reset;
   bool announce;
   bool forward;
+  char *connect;
 #ifdef HAS_HID
   bool hid;
 #endif
@@ -177,8 +184,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
   case 'f':
     arguments->forward = true;
     break;
-
-
+  case 'c':
+    arguments->connect = arg;
+    break;
   case 'r':
     arguments->reset = true;
     break;
@@ -422,6 +430,51 @@ static void aoa_cat(libusb_device_handle *device, struct arguments *arguments) {
 
   bool aoa_sent_already = !(arguments->wait);
 
+  int fd_in = STDIN_FILENO;
+  int fd_out = STDOUT_FILENO;
+
+  if (strlen(arguments->connect)>0)
+  {
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
+    int s, sfd;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = 0;
+    hints.ai_protocol = 0;
+
+    s = getaddrinfo("localhost", arguments->connect, &hints, &result);
+    if (s !=0 ) {
+      fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+      libusb_exit(NULL);
+      exit(EXIT_FAILURE);
+    }
+
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+      sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+
+      if (sfd == -1)
+        continue;
+      if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
+        break;  // Success
+      
+      close(sfd);
+    }
+    if (rp == NULL) {
+      fprintf(stderr, "Could not connect\n");
+      libusb_exit(NULL);
+      exit(EXIT_FAILURE);
+    }
+
+    freeaddrinfo(result);
+
+    // sfd contains the open socket file descriptor
+    fd_in = sfd;
+    fd_out = sfd;
+  }
+
   while (1) {
     if (buffer_from_stdin_len < 0 || buffer_from_aoain_len < 0) {
       goto exiting;
@@ -453,13 +506,13 @@ static void aoa_cat(libusb_device_handle *device, struct arguments *arguments) {
     libusb_free_pollfds(usb_fds);
 
     if (aoa_sent_already && buffer_from_stdin_len == 0) {
-      fds[j].fd = STDIN_FILENO;
+      fds[j].fd = fd_in;
       fds[j].events = POLLIN;
       j++;
     }
 
     if (buffer_from_aoain_len > 0) {
-      fds[j].fd = STDOUT_FILENO;
+      fds[j].fd = fd_out;
       fds[j].events = POLLOUT;
       j++;
     }
@@ -511,11 +564,11 @@ static void aoa_cat(libusb_device_handle *device, struct arguments *arguments) {
 
     // check which one fired
     for (size_t i = 0; i < num_pollfd; i++) {
-      if (fds[i].fd == STDIN_FILENO && fds[i].revents & POLLIN) {
+      if (fds[i].fd == fd_in && fds[i].revents & POLLIN) {
         // reading from stdin possible
         buffer_from_stdin_len =
-            read(STDIN_FILENO, buffer_from_stdin, max_packet_size);
-        if (buffer_from_stdin_len == 0) {
+            read(fd_in, buffer_from_stdin, max_packet_size);
+        if (buffer_from_stdin_len <= 0) {
           goto exiting;
         }
         // fprintf(stderr, "read %ld bytes from stdin\n",
@@ -524,11 +577,11 @@ static void aoa_cat(libusb_device_handle *device, struct arguments *arguments) {
                                   buffer_from_stdin_len, stdin_to_aoa_cb,
                                   &buffer_from_stdin_len, 0);
         libusb_submit_transfer(stdin_to_AOA);
-      } else if (fds[i].fd == STDOUT_FILENO && fds[i].revents & POLLOUT) {
+      } else if (fds[i].fd == fd_out && fds[i].revents & POLLOUT) {
         // writing to stdout possible
         // fprintf(stderr, "read %ld bytes from aoa\n", buffer_from_aoain_len);
         ssize_t b =
-            write(STDOUT_FILENO, buffer_from_aoain, buffer_from_aoain_len);
+            write(fd_out, buffer_from_aoain, buffer_from_aoain_len);
         if (b != buffer_from_aoain_len) {
           fprintf(stderr, "could not write out the complete AOA buffer to "
                           "stdout. Exiting...\n");
@@ -549,7 +602,10 @@ static void aoa_cat(libusb_device_handle *device, struct arguments *arguments) {
     }
   }
 
-exiting:;
+exiting:
+  if (fd_in == fd_out) {
+    close(fd_in);
+  }
 }
 
 #ifdef HAS_HID
@@ -662,6 +718,7 @@ int main(int argc, char *argv[]) {
 #endif
   arguments.announce = false;
   arguments.forward = false;
+  arguments.connect = "";
 
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
