@@ -5,7 +5,7 @@ PHONY: clean version~
 
 CC= $(CROSS_COMPILE)gcc
 ifdef OPENWRT
-COPTS += -DNO_HID=1
+CFLAGS += -DNO_HID=1
 LDADD:= -lusb-1.0 -largp
 else
 LDADD:= -lusb-1.0 -lb64

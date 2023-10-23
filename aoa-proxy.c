@@ -85,7 +85,7 @@ static struct argp_option options[] = {
     {"wait", 'w', 0, 0,
      "Wait for first byte from AOA device before forwarding input from stdin. "
      "(default: false)", 0},
-    {"connect", 'c', 0, 0,
+    {"connect", 'c', "PORT", 0,
      "Connect to a tcp port on localhost and forward AOA traffic via network instead of stdio. "
      "(default: \"\")", 0},
     {0, 0, 0, 0, "Forwarding/HID options", 0},
@@ -201,7 +201,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 
   case ARGP_KEY_END:
     if (arguments->busnum == -1 || arguments->portnums[0] == 0) {
-      argp_error(state, "busnum and portnums are required");
+      argp_error(state, "port is required");
     }
     break;
 
