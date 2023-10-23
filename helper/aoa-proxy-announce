@@ -5,17 +5,19 @@ PORT="$(basename "$1")"
 MANUFACTURER="aoa-proxy"
 MODEL="$(hostnamectl | egrep "(Vendor|Model)" | cut -f2 -d: | xargs)"
 VERSION="$(hostnamectl | grep -Po "(?<=Operating System: ).*" )"
-SERIAL=""$(hostnamectl hostname)""
+SERIAL="$(hostnamectl hostname)"
 DESCRIPTION="""$MODEL
-IP: $(ip -o route | egrep -v "dev (br|virbr|docker)" | grep -Po "(?<=src )\S+")
+IP: $(ip -o route | egrep -v "(^default|dev (br|virbr|docker))" | sed -r 's/.* dev (\S*) .+ src (\S+) .*/\2\t\1/')
 """
 URL="https://github.com/jo-bitsch/aoa-proxy/"
+MODEL_AND_SERVICES="""$MODEL
+ssh"""
 
 
 /usr/sbin/aoa-proxy \
   --port "$PORT" \
   --manufacturer "$MANUFACTURER" \
-  --model "$MODEL" \
+  --model "$MODEL_AND_SERVICES" \
   --model-version "$VERSION" \
   --serial "$SERIAL" \
   --description "$DESCRIPTION" \

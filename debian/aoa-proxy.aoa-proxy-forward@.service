@@ -2,4 +2,4 @@
 Description="forward AOA stream from USB connected android device to ssh or cockpit"
 
 [Service]
-ExecStart=/usr/lib/aoa-proxy-forward %I
+ExecStart=/usr/sbin/aoa-proxy --port %I --connect 22 --wait --forward 
