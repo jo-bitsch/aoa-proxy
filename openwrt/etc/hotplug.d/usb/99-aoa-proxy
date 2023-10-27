@@ -10,7 +10,7 @@ case "${ACTION}" in
             *)
                 . /etc/os-release
                 MANUFACTURER="aoa-proxy"
-                MODEL="$(echo -e "${OPENWRT_DEVICE_MANUFACTURER} ${OPENWRT_DEVICE_PRODUCT}"
+                MODEL="$(echo -e "${OPENWRT_DEVICE_MANUFACTURER} ${OPENWRT_DEVICE_PRODUCT}")"
                 VERSION="${PRETTY_NAME}"
                 SERIAL="$(uci get system.@system[0].hostname)"
                 DESCRIPTION="""$MODEL
