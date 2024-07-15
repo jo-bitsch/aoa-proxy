@@ -387,6 +387,11 @@ static void aoa_to_stdout_cb(struct libusb_transfer *transfer) {
   if (transfer->user_data != NULL) {
     *((ssize_t *)transfer->user_data) = transfer->actual_length;
   }
+  if (transfer->status != LIBUSB_TRANSFER_COMPLETED ){
+    *((ssize_t *)transfer->user_data) = -1;
+    fprintf(stderr, "transfer->status = %x\n", transfer->status);
+  }
+  
 }
 
 static void signal_handler(__attribute__ ((unused)) int sig) {}
@@ -739,6 +744,9 @@ int main(int argc, char *argv[]) {
     }
     if(arguments.forward){
       aoa_cat(dev, &arguments);
+      if (arguments.reset) {
+        aoa_reset(dev, &arguments);
+      }
     } else {
 #ifdef HAS_HID
       if(arguments.hid){

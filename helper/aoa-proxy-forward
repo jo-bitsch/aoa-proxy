@@ -1,0 +1,12 @@
+#!/bin/sh
+set -x
+PORT="$(basename "$1")"
+
+/usr/sbin/aoa-proxy \
+  --port "$PORT" \
+  --connect 22 \
+  --wait \
+  --forward
+/usr/sbin/aoa-proxy \
+  --port "$PORT" \
+  --reset

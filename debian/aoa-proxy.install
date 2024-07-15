@@ -1,2 +1,3 @@
 aoa-proxy usr/sbin/
 helper/aoa-proxy-announce usr/lib/
+helper/aoa-proxy-forward usr/lib/
