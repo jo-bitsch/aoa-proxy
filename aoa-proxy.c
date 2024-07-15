@@ -282,7 +282,8 @@ static bool is_device_in_AOA_mode(libusb_device_handle *dev) {
 
   if (desc.idVendor != 0x18d1 || (desc.idProduct != 0x2d00 &&
       desc.idProduct != 0x2d01 && desc.idProduct != 0x2d02 &&
-      desc.idProduct != 0x2d03)) {
+      desc.idProduct != 0x2d03 && desc.idProduct != 0x2d04 &&
+      desc.idProduct != 0x2d05)) {
     ret = false;
   } else {
     ret = true;

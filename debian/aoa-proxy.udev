@@ -8,10 +8,19 @@ TEST=="/etc/aoa-proxy_not_to_be_run", GOTO="aoa-proxy-end"
 
 # is this a device in AOA mode, that got enumerated?
 # if so, start the forwarding
+
+# accessory
 ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d00", GOTO="aoa-proxy-forward"
+# accessory + adb
 ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d01", GOTO="aoa-proxy-forward"
-ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d02", GOTO="aoa-proxy-forward"
-ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d03", GOTO="aoa-proxy-forward"
+# audio --> forwarder does not need to run, as accessory is not available
+ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d02", GOTO="aoa-proxy-end"
+# audio + adb --> forwarder does not need to run, as accessory is not available
+ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d03", GOTO="aoa-proxy-end"
+# accessory + audio
+ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d04", GOTO="aoa-proxy-forward"
+# accessory + audio + adb
+ATTRS{idVendor}=="18d1", ATTRS{idProduct}=="2d05", GOTO="aoa-proxy-forward"
 
 ENV{adb_user}=="yes", TAG+="systemd", ENV{SYSTEMD_WANTS}="aoa-proxy-announce@.service"
 ENV{adb_user}=="yes", GOTO="aoa-proxy-end"
@@ -25,7 +34,7 @@ SUBSYSTEM=="usb", DRIVER=="usb", ATTR{removable}=="removable", TAG+="systemd", E
 GOTO="aoa-proxy-end"
 
 LABEL="aoa-proxy-forward"
-# for devices that have AOA already activated, start a forwarder
+# for devices that have AOA already activated and an accessory endpoint available, start a forwarder
 ATTR{idVendor}=="18d1", TAG+="systemd", ENV{SYSTEMD_WANTS}="aoa-proxy-forward@.service"
 
 LABEL="aoa-proxy-end"
