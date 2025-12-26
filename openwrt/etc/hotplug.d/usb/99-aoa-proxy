@@ -1,18 +1,19 @@
-#!/bin/sh /etc/rc.common
+#!/bin/sh
 
 
 case "${ACTION}" in
     bind)
         case "${PRODUCT}" in
             18d1/2d00/* | 18d1/2d01/* | 18d1/2d04/* | 18d1/2d05/*)
-                service aoa-proxy-forward start
+                /etc/init.d/aoa-proxy-forward start "$DEVICENAME"
                 ;;
             *)
                 . /etc/os-release
                 MANUFACTURER="aoa-proxy"
-                MODEL="$(echo -e "${OPENWRT_DEVICE_MANUFACTURER} ${OPENWRT_DEVICE_PRODUCT}")"
+                MODEL="$(cat /tmp/sysinfo/model 2>/dev/null || echo "OpenWRT Device")"
+                # MODEL="$(echo -e "${OPENWRT_DEVICE_MANUFACTURER} ${OPENWRT_DEVICE_PRODUCT}")"
                 VERSION="${PRETTY_NAME}"
-                SERIAL="$(uci get system.@system[0].hostname)"
+                SERIAL="$(uci -q get system.@system[0].hostname || echo "openwrt")"
                 DESCRIPTION="""$MODEL
 IP: $(ip -o route | egrep -v "(^default|dev (virbr|docker))" | sed -r 's/.* dev (\S*) .+ src (\S+) .*/\2\t\1/')
 """
@@ -32,6 +33,6 @@ ssh"""
         esac
         ;;
     unbind)
-        service aoa-proxy-forward stop "${DEVICENAME}"
+        /etc/init.d/aoa-proxy-forward stop "${DEVICENAME}"
         ;;
 esac
