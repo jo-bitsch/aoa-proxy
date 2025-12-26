@@ -14,13 +14,13 @@ endif
 #HAS_B64:::= $(shell if ($(CC) -lb64 2>&1 | grep main); then echo 1; else echo 0; fi )
 #HAS_B64 := $(shell bash -c "$(CC) -lb64 | grep main" )
 
-GIT_VERSION := $(shell git --no-pager describe --tags --always --dirty)
+GIT_VERSION := $(shell git --no-pager describe --tags --always --dirty 2>/dev/null || echo "unknown")
 # recompile version.h dependants when GIT_VERSION changes, uses temporary file version~
 version~:
 	@echo '$(GIT_VERSION)' | cmp -s - $@ || echo '$(GIT_VERSION)' > $@
 version.h: version~
 	@echo "#ifndef GIT_VERSION"  > version.h
-	@echo "#define GIT_VERSION \"$(GIT_VERSION)"\" >> version.h
+	@echo "#define GIT_VERSION $(GIT_VERSION)" >> version.h
 	@echo "#endif" >> version.h
 	@echo Git version $(GIT_VERSION)
 

@@ -32,7 +32,11 @@
 
 #define PORT_NUMBERS_LEN 8
 
-const char *argp_program_version = "aoa-proxy " GIT_VERSION;
+
+#define xstr(s) str(s)
+#define str(s) #s
+
+const char *argp_program_version = "aoa-proxy " xstr(GIT_VERSION);
 const char *argp_program_bug_address = "https://github.com/jo-bitsch/aoa-proxy/issues";
 static char doc[] =
     "Interact with Android devices using the Android Open Accessory protocol"
